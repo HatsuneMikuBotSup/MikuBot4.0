@@ -1,5 +1,4 @@
 
-cd ${pwd}
 while true
 do
 	
