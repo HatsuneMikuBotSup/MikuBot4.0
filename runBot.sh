@@ -1,5 +1,5 @@
 
-cd pwd
+cd ${pwd}
 while true
 do
 	
