@@ -25,7 +25,6 @@ module.exports = {
             "Other commands:\n" +
             "!h [text]                   - Searches for Hentai on rule34\n" +
             "!spam [text]                - Spams [text]\n" +
-            "                                            " +
             "!helpall                    - List of ALL commands\n";
         message.channel.send(helpMessage);
     }

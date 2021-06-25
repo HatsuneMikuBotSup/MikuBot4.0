@@ -2,8 +2,7 @@ module.exports = {
     name: "helpall",
     description: "Lists ALL commands!",
     execute(message, embed) {
-        embed.setTitle("All commands:");
-        embed.setDescription(
+        var helpMessage =
             "!anal                          - Anal\n" +
             "!armpit                        - Weird fetish ig\n" +
             "!ass                           - Big ass\n" +
@@ -40,8 +39,7 @@ module.exports = {
             "!sex                           - Sex with miku\n" +
             "!spam                          - Spams entered text\n" +
             "!spank                         - Spank someone\n" +
-            "!pain                          - If u are in pain\n"
-        );
-        message.channel.send(embed);
+            "!pain                          - If u are in pain\n";
+        message.channel.send(helpMessage);
     }
 }
