@@ -2,8 +2,7 @@ module.exports = {
   name: "help",
   description: "Lists important commands!",
     execute(message, embed) {
-        embed.setTitle("All commands:");
-        embed.setDescription(
+        var helpMessage =
             "Miku commands:\n" +
             "!anal                       - Anal \n" +
             "!bj                         - Blowjob\n" +
@@ -27,8 +26,7 @@ module.exports = {
             "!h [text]                   - Searches for Hentai on rule34\n" +
             "!spam [text]                - Spams [text]\n" +
             "                                            " +
-            "!helpall                    - List of ALL commands\n"
-        );
-        message.channel.send(embed);
+            "!helpall                    - List of ALL commands\n";
+        message.channel.send(helpMessage);
     }
 }
