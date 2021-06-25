@@ -141,7 +141,8 @@ client.on("message", message => {
             switch (commandSplitted[0]) { //all nsfw commands
                 case "anal":        client.commands.get("anal").execute(message); break;
                 case "armpit":      client.commands.get("armpit").execute(message); break;
-                case "asshole":        client.commands.get("anal").execute(message); break;
+                case "asshole":     client.commands.get("anal").execute(message); break;
+                case "bdsm":          client.commands.get("bdsm").execute(message); break;
                 case "bj":          client.commands.get("blowjob").execute(message); break;
                 case "blowjob":     client.commands.get("blowjob").execute(message); break;
                 case "boobies":     client.commands.get("boobs").execute(message); break;
