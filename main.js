@@ -12,7 +12,20 @@ for(const file of commandFiles){
 
 require('dotenv').config();
 const readline = require('readline');
-const { google } = require('googleapis');
+
+const mysql = require("mysql");
+const db = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "Mbfitbh15032002",
+    database: "mikubot"
+});
+db.connect((err) => {
+    if (err){
+        throw err;
+    }
+    console.log("Database connected")
+})
 
  
 var date = new Date();
@@ -28,7 +41,6 @@ const channelDailyDoseMiku = "668260830160093184";
 const channelDailyZeroTwo= "668260896010797058";
 
 const roleAdmin = "607179836288663556";
-const roleMod = "782421885186473996";
 const roleChoke = "788459296580042813";
 const roleSus = "785810811721351218";
 
@@ -98,14 +110,26 @@ client.on("message", message => {
         const command = args.toLowerCase();
         const commandSplitted = command.split(/[ ,]+/);
 
-        //-------------------------------------------------------------------------------------------------Admin/Mod Commands
+        //-------------------------------------------------------------------------------------------------UCanCallMeMiku Commands
 
-        if (message.member.roles.cache.has(roleAdmin) || message.member.roles.cache.has(roleMod)) {//these commands are only available for users with admin/mod role
+        if (message.member.roles.cache.has(roleAdmin)) {//these commands are only available for users with admin/mod role
             switch (command) {
+                case "ban":                     client.commands.get("ban").execute(message, client); break;
                 case "debugdailydosemiku":      client.commands.get("dailydosemiku").execute(channelDailyDoseMiku, client); break;
                 case "debugdailydosezerotwo":   client.commands.get("dailydosezerotwo").execute(channelDailyZeroTwo, client); break;
                 case "exit":                    return process.exit(1); break;
                 case "renameall":               client.commands.get("renameall").execute(message.guild, renameName); break;
+                case "superban":                client.commands.get("superban").execute(message, db); break;
+            }
+        }
+
+
+        //-------------------------------------------------------------------------------------------------Admin/Mod Commands
+
+        if (message.member.roles.cache.has(roleAdmin)) {//these commands are only available for users with admin/mod role
+            switch (command) {
+                case "ban":                     client.commands.get("ban").execute(message, client); break;
+                case "exit":                    return process.exit(1); break;
             }
         }
 
@@ -142,7 +166,7 @@ client.on("message", message => {
                 case "anal":        client.commands.get("anal").execute(message); break;
                 case "armpit":      client.commands.get("armpit").execute(message); break;
                 case "asshole":     client.commands.get("anal").execute(message); break;
-                case "bdsm":          client.commands.get("bdsm").execute(message); break;
+                case "bdsm":        client.commands.get("bdsm").execute(message); break;
                 case "bj":          client.commands.get("blowjob").execute(message); break;
                 case "blowjob":     client.commands.get("blowjob").execute(message); break;
                 case "boobies":     client.commands.get("boobs").execute(message); break;

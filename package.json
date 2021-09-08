@@ -9,10 +9,9 @@
   "author": "UCanCallMeMiku",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^12.5.1",
+    "discord.js": "^12.5.3",
     "dotenv": "^10.0.0",
-    "googleapis": "^39.2.0",
-    "mongoose": "^5.11.14",
+    "mysql": "^2.18.1",
     "xml2js": "^0.4.23"
   }
 }
