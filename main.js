@@ -17,7 +17,7 @@ const mysql = require("mysql");
 const db = mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "Mbfitbh15032002",
+    password: process.env.MYSQLPASS,
     database: "mikubot"
 });
 db.connect((err) => {
@@ -45,6 +45,8 @@ const roleChoke = "788459296580042813";
 const roleSus = "785810811721351218";
 
 const renameName = "UCanCallMe"; //should be around 10 Characters Never go over lenghth 30
+
+const mainServer = "606567664852402188";
 
 
 //-------------------------------------------------------------------------------------------------Boot
@@ -118,6 +120,7 @@ client.on("message", message => {
                 case "debugdailydosemiku":      client.commands.get("dailydosemiku").execute(channelDailyDoseMiku, client); break;
                 case "debugdailydosezerotwo":   client.commands.get("dailydosezerotwo").execute(channelDailyZeroTwo, client); break;
                 case "exit":                    return process.exit(1); break;
+                case "test":                    message.channel.send(message.member.guild.id); console.log(message.member.guild.id); break;
                 case "renameall":               client.commands.get("renameall").execute(message.guild, renameName); break;
                 case "superban":                client.commands.get("superban").execute(message, db); break;
             }
@@ -218,17 +221,22 @@ const welcomeMessageAft = [
 ];
 
 client.on("guildMemberAdd", member => {//new members will be greeted in welcome channel, if they account is new they automaticly get assigned the "sus" role
-    const channel = client.channels.cache.get(channelWelcome);
-    if (Date.now() - member.user.createdAt < 1000 * 60 * 60 * 24 * 10) {
-        member.roles.add(roleSus);
-        channel.send(member.user.username + " kinda sus :thinking:");
+    
+    if (Date.now() - member.user.createdAt < 1000 * 60 * 60 * 24 * 10 &&
+        true /*server has a sus role*/) {
+        member.roles.add(roleSus /*server sus role id*/);
     }
-    else {
+
+    if (true /*server has a welcome channel*/) {
+        const channel = client.channels.cache.get(/*server welcome channel*/);
         channel.send(   welcomeMessagePre[Math.floor(Math.random() * welcomeMessagePre.length)]
-                        + " <@" + member + "> " +
-                        welcomeMessageAft[Math.floor(Math.random() * welcomeMessageAft.length)]);
+        + " <@" + member + "> " +
+        welcomeMessageAft[Math.floor(Math.random() * welcomeMessageAft.length)]);
     }
-    client.commands.get("renameall").execute(member.guild, renameName);
+    
+    if (member.guild.id == mainServer) {
+        client.commands.get("renameall").execute(member.guild, renameName);
+    }
 });
 
 
