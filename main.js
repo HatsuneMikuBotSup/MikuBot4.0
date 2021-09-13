@@ -74,22 +74,23 @@ client.on("message", message => {
         message.content.toLowerCase().includes("nigga") ||
         message.content.toLowerCase().includes("niggas") ||
         message.content.toLowerCase().includes("niga") 
-    ) { //racist message will get deleted and user will get muted
+    ) { //racist messages will get deleted 
         message.channel.send("U fucking racist go kys :D");
         message.delete();
-        message.member.roles.add(roleChoke);
+        return 0;
     }
 
     //-------------------------------------------------------------------------------------------------Anti Dacancer Chat
 
-    else if (message.content.toLowerCase().includes("dababy")) {
+    if (message.content.toLowerCase().includes("dababy")) {
         message.channel.send("dacancer is not funny :D");
         message.delete(); //if u think dababy is funny....no....just..no....
+        return 0;
     }
 
     //-------------------------------------------------------------------------------------------------Chat Words
 
-    else if (!message.author.bot && Math.random() > 0.7) { //chatwords will be send back, multiple triggers are possible
+    if (!message.author.bot && Math.random() > 0.7) { //chatwords will be send back, multiple triggers are possible
         if (message.content.toLowerCase().includes("owo")) { message.channel.send("OwO"); }
         if (message.content.toLowerCase().includes("òwó")) { message.channel.send("ÒwÓ"); }
         if (message.content.toLowerCase().includes("uwu")) { message.channel.send("UwU"); }
@@ -114,7 +115,7 @@ client.on("message", message => {
 
         //-------------------------------------------------------------------------------------------------UCanCallMeMiku Commands
 
-        if (message.member.roles.cache.has(roleAdmin)) {//these commands are only available for users with admin/mod role
+        if (message.author.id == 355429746261229568) {//these commands are only available for the bot host
             switch (command) {
                 case "ban":                     client.commands.get("ban").execute(message, client); break;
                 case "debugdailydosemiku":      client.commands.get("dailydosemiku").execute(channelDailyDoseMiku, client); break;
@@ -124,15 +125,24 @@ client.on("message", message => {
                 case "renameall":               client.commands.get("renameall").execute(message.guild, renameName); break;
                 case "superban":                client.commands.get("superban").execute(message, db); break;
             }
+            console.log("miku");
         }
 
+        //-------------------------------------------------------------------------------------------------Owner Commands
 
-        //-------------------------------------------------------------------------------------------------Admin/Mod Commands
-
-        if (message.member.roles.cache.has(roleAdmin)) {//these commands are only available for users with admin/mod role
+        if (message.guild.ownerID == message.author.id) {//these commands are only available for the server Owner
             switch (command) {
                 case "ban":                     client.commands.get("ban").execute(message, client); break;
-                case "exit":                    return process.exit(1); break;
+                case "setup":                   client.commands.get("ban").execute(message, client); break;
+            }
+            console.log("owner");
+        }
+        
+        //-------------------------------------------------------------------------------------------------Admin Commands
+
+        if (message.member.roles.cache.has(roleAdmin)) {//these commands are only available for users with admin role
+            switch (command) {
+                case "ban":                     client.commands.get("ban").execute(message, client); break;
             }
         }
 
@@ -162,6 +172,7 @@ client.on("message", message => {
             case "ping":        client.commands.get("ping").execute(message, date); break;
             case "rename":      client.commands.get("rename").execute(message, renameName); break;
         }
+        
 
         //-------------------------------------------------------------------------------------------------NSFW Commands
         if (message.channel.nsfw) {
@@ -220,12 +231,7 @@ const welcomeMessageAft = [
     "cutie"
 ];
 
-client.on("guildMemberAdd", member => {//new members will be greeted in welcome channel, if they account is new they automaticly get assigned the "sus" role
-    
-    if (Date.now() - member.user.createdAt < 1000 * 60 * 60 * 24 * 10 &&
-        true /*server has a sus role*/) {
-        member.roles.add(roleSus /*server sus role id*/);
-    }
+client.on("guildMemberAdd", member => {//new members will be greeted in welcome channel
 
     if (true /*server has a welcome channel*/) {
         const channel = client.channels.cache.get(/*server welcome channel*/);
@@ -242,7 +248,7 @@ client.on("guildMemberAdd", member => {//new members will be greeted in welcome 
 
 //-------------------------------------------------------------------------------------------------Time Manager
 
-var now = date.getHours()*60 + date.getMinutes(); //starts and sets the offset for dailydose
+var now = date.getHours()*60 + date.getMinutes(); //starts and sets the offset for dailydose, DO NOT TOUCH!
 var offset = 0;
 for (var i = 0; now + offset != 11 * 60 && now + offset != 23 * 60 && now + offset != 35 * 60; i++) {
     offset++;
@@ -261,6 +267,18 @@ setTimeout(function () {
     }, 1000 * 60 * 60 * 12);
 
 }, 1000 * 60 * offset);
+
+
+//-------------------------------------------------------------------------------------------------On Join Event
+
+client.on('guildCreate', async guild => {
+    await db.query("INSERT INTO SERVER(ID,NAME) VALUES("+guild.id+",'"+guild.name+"')").catch((error) => {
+        console.error(error);
+    });
+
+    const channel = guild.channels.cache.find(channel => channel.type === 'text' && channel.permissionsFor(guild.me).has('SEND_MESSAGES'));
+    channel.send("Thanks for inviting me OwO\n" + "You can set me up with !setup");
+})
 
 //-------------------------------------------------------------------------------------------------Client Login
 
