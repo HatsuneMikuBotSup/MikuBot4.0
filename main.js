@@ -94,6 +94,13 @@ function updateMaps() {
   });
 }
 
+function logThis(p1, p2) {
+  if (channelLog.get(p1.id) != null) {
+    const channel = client.channels.cache.get(channelLog.get(p1.id));
+    channel.send(p2);
+  }
+}
+
 //-------------------------------------------------------------------------------------------------Message Event
 
 client.on("message", (message) => {
@@ -119,12 +126,18 @@ client.on("message", (message) => {
       message.content.toLowerCase().includes("niga")
     ) {
       //racist messages will get deleted
-      message.channel.send("U fucking racist go kys :D " +message.member.user.toString());
+      message.channel.send(
+        "U fucking racist go kys :D " + message.member.user.toString()
+      );
       message.delete();
+      logThis(
+        message.guild,
+        message.member.user.toString() + " said something racist"
+      );
       return 0;
     }
   }
-  
+
   //-------------------------------------------------------------------------------------------------Anti Dacancer Chat
 
   if (message.content.toLowerCase().includes("dababy")) {
@@ -239,6 +252,10 @@ client.on("message", (message) => {
             message.channel.send(
               "Daily Dose of Miku set to channel: " + message.channel.toString()
             );
+            logThis(
+              message.guild,
+              "Daily Dose of Miku set to channel: " + message.channel.toString()
+            );
             updateMaps();
           } else {
             message.channel.send("This channel is not nsfw!");
@@ -250,6 +267,7 @@ client.on("message", (message) => {
               message.guild.id
           );
           message.channel.send("Daily Dose of Miku is OFF");
+          logThis(message.guild, "Daily Dose of Miku is OFF");
           updateMaps();
           return 0;
 
@@ -302,6 +320,7 @@ client.on("message", (message) => {
             "UPDATE SERVER SET ADMIN_ROLE = NULL WHERE ID = " + message.guild.id
           );
           message.channel.send("Admin role is OFF");
+          logThis(message.guild, "Admin role is OFF");
           updateMaps();
           return 0;
 
@@ -319,6 +338,7 @@ client.on("message", (message) => {
               message.guild.id
           );
           message.channel.send("Slurfilter  is OFF");
+          logThis(message.guild, "Slurfilter  is OFF");
           updateMaps();
           return 0;
 
@@ -328,6 +348,7 @@ client.on("message", (message) => {
               message.guild.id
           );
           message.channel.send("Slurfilter is ON");
+          logThis(message.guild, "Slurfilter is ON");
           updateMaps();
           return 0;
       }
@@ -348,6 +369,10 @@ client.on("message", (message) => {
                   message.guild.id
               );
               message.channel.send("Prefix changed to: " + commandSplitted[1]);
+              logThis(
+                message.guild,
+                "Prefix changed to: " + commandSplitted[1]
+              );
               updateMaps();
             } else {
               message.channel.send("prefix to long!");
@@ -371,6 +396,12 @@ client.on("message", (message) => {
                     message.guild.id
                 );
                 message.channel.send(
+                  "Admin role changed to: <@&" +
+                    message.mentions.roles.first() +
+                    ">"
+                );
+                logThis(
+                  message.guild,
                   "Admin role changed to: <@&" +
                     message.mentions.roles.first() +
                     ">"
