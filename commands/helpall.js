@@ -1,7 +1,8 @@
 module.exports = {
   name: "helpall",
   description: "Lists ALL commands!",
-  execute(message, prefix, embed) {
+  execute(message, prefix, botName, Discord) {
+
     var helpMessage =
     prefix+"anal                          - Anal\n" +
     prefix+"armpit                        - Weird fetish ig\n" +
@@ -40,6 +41,13 @@ module.exports = {
     prefix+"spam                          - Spams entered text\n" +
     prefix+"spank                         - Spank someone\n" +
     prefix+"pain                          - If u are in pain\n";
-    message.channel.send(helpMessage);
+
+    const embed = new Discord.MessageEmbed()
+      .setTitle("Helpall")
+      .setColor("#137a7f")
+      .setAuthor(botName, "https://cdn.discordapp.com/avatars/782328525071056918/35121d26aa99b27416b19f9f51621a16.png")
+      .setDescription(helpMessage);
+
+    message.channel.send(embed);
   },
 };

@@ -2,7 +2,6 @@
 
 const Discord = require("discord.js");
 const client = new Discord.Client();
-const embed = new Discord.MessageEmbed();
 const fs = require("fs");
 client.commands = new Discord.Collection();
 //Importing Discord API and setting directory of commands
@@ -324,12 +323,12 @@ client.on("message", (message) => {
       case "help":
         client.commands
           .get("help")
-          .execute(message, prefix.get(message.guild.id), embed);
+          .execute(message, prefix.get(message.guild.id), botName, Discord);
         break;
       case "helpall":
         client.commands
           .get("helpall")
-          .execute(message, prefix.get(message.guild.id), embed);
+          .execute(message, prefix.get(message.guild.id), botName, Discord);
         break;
       case "hug":
         client.commands.get("hug").execute(message);
@@ -379,7 +378,7 @@ client.on("message", (message) => {
       case "setup":
         client.commands
           .get("setup")
-          .execute(message, prefix.get(message.guild.id), embed);
+          .execute(message, prefix.get(message.guild.id), botName, Discord);
         break;
     }
 
