@@ -42,7 +42,6 @@ const chatWordsPercentage = new Map();
 const slurFilter = new Map();
 
 const channelLog = new Map();
-const channelGeneral = new Map();
 const channelWelcome = new Map();
 const channelDailyDoseMiku = new Map();
 
@@ -323,10 +322,14 @@ client.on("message", (message) => {
         client.commands.get("die").execute(message);
         break;
       case "help":
-        client.commands.get("help").execute(message, embed);
+        client.commands
+          .get("help")
+          .execute(message, prefix.get(message.guild.id), embed);
         break;
       case "helpall":
-        client.commands.get("helpall").execute(message, embed);
+        client.commands
+          .get("helpall")
+          .execute(message, prefix.get(message.guild.id), embed);
         break;
       case "hug":
         client.commands.get("hug").execute(message);
@@ -372,6 +375,11 @@ client.on("message", (message) => {
         break;
       case "rename":
         client.commands.get("rename").execute(message, renameName);
+        break;
+      case "setup":
+        client.commands
+          .get("setup")
+          .execute(message, prefix.get(message.guild.id), embed);
         break;
     }
 
