@@ -1,9 +1,11 @@
-﻿const Discord = require("discord.js");
+﻿//-------------------------------------------------------------------------------------------------Discord API
+
+const Discord = require("discord.js");
 const client = new Discord.Client();
 const embed = new Discord.MessageEmbed();
 const fs = require("fs");
 client.commands = new Discord.Collection();
-
+//Importing Discord API and setting directory of commands
 const commandFiles = fs
   .readdirSync("./commands/")
   .filter((file) => file.endsWith(".js"));
@@ -12,16 +14,20 @@ for (const file of commandFiles) {
   client.commands.set(command.name, command);
 }
 
+//-------------------------------------------------------------------------------------------------MySQL API
+
 require("dotenv").config();
 const readline = require("readline");
-
+//setting up Connection to MySQL Database
 const mysql = require("mysql");
+const dailydosemiku = require("./commands/dailydosemiku");
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: process.env.MYSQLPASS,
   database: "mikubot",
-});
+  supportBigNumbers: true,
+}); //Connecting to MySQL
 db.connect((err) => {
   if (err) {
     throw err;
@@ -29,10 +35,8 @@ db.connect((err) => {
   console.log("Database connected");
 });
 
-var date = new Date();
-
 //-------------------------------------------------------------------------------------------------Constant
-
+//Const Maps for less Database traffic
 const prefix = new Map();
 const chatWordsPercentage = new Map();
 const slurFilter = new Map();
@@ -44,24 +48,29 @@ const channelDailyDoseMiku = new Map();
 
 const roleAdmin = new Map();
 const roleSus = new Map();
-
+//Fixed const id's
 const botName = "Miku";
 const renameName = "UCanCallMe"; //should be around 10 Characters Never go over lenghth 30
 const mainServer = "606567664852402188";
+const hostID = "355429746261229568";
+var date = new Date();
 
 //-------------------------------------------------------------------------------------------------Boot
 
 client.once("ready", () => {
+  //gets executed once at the start of the bot
   updateMaps();
   client.user.setActivity(botName + " 4 President!");
   console.log(botName + " is online!");
 });
 
 function updateMaps() {
+  //Synchronises the maps with the database. Only one get request
   client.guilds.cache.forEach((guild) => {
     db.query(
       "SELECT * FROM SERVER WHERE ID = " + guild.id + ";",
       function (err, result, fields) {
+        console.log(result);
         if (result[0] == null) {
           db.query(
             "INSERT INTO SERVER(ID,NAME,PREFIX) VALUES(" +
@@ -71,13 +80,13 @@ function updateMaps() {
               "','!');"
           );
         } else {
+          //Synchronises the maps with the database
           prefix.set(guild.id, result[0].PREFIX);
           chatWordsPercentage.set(guild.id, result[0].CHAT_WORDS_PERCENTAGE);
           slurFilter.set(guild.id, result[0].SLUR_FILTER);
-          channelLog.set(guild.id, result[0].LOG_CHANNEL);
-          channelGeneral.set(guild.id, result[0].GENERAL_CHANNEL);
-          channelWelcome.set(guild.id, result[0].WELCOME_CHANNEL);
           channelDailyDoseMiku.set(guild.id, result[0].DAILY_CHANNEL);
+          channelLog.set(guild.id, result[0].LOG_CHANNEL);
+          channelWelcome.set(guild.id, result[0].WELCOME_CHANNEL);
           roleAdmin.set(guild.id, result[0].ADMIN_ROLE);
           roleSus.set(guild.id, result[0].SUS_ROLE);
         }
@@ -89,6 +98,7 @@ function updateMaps() {
 //-------------------------------------------------------------------------------------------------Message Event
 
 client.on("message", (message) => {
+  //gets called on every message
   console.log(
     message.guild.name + " " + message.author.tag + ": " + message.content
   );
@@ -124,7 +134,7 @@ client.on("message", (message) => {
 
   //-------------------------------------------------------------------------------------------------Chat Words
 
-  if (Math.random() > 0.7) {
+  if (Math.random() > chatWordsPercentage.get(message.guild.id) / 100) {
     //chatwords will be send back, multiple triggers are possible
     if (message.content.toLowerCase().includes("owo")) {
       message.channel.send("OwO");
@@ -163,31 +173,32 @@ client.on("message", (message) => {
   //-------------------------------------------------------------------------------------------------Commands Setup
 
   if (
+    //setup for commands that start with the prefix
     message.content.startsWith(prefix.get(message.guild.id)) &&
     !message.author.bot &&
     !message.content.toLowerCase().includes("@everyone") &&
     !message.content.toLowerCase().includes("@here")
   ) {
-    const args = message.content.slice(prefix.length);
+    const args = message.content.slice(prefix.get(message.guild.id).length);
     const command = args.toLowerCase();
     const commandSplitted = command.split(/[ ,]+/);
 
-    //-------------------------------------------------------------------------------------------------UCanCallMeMiku Commands
+    //-------------------------------------------------------------------------------------------------Host Commands
 
-    if (message.author.id == 355429746261229568n) {
+    if (message.author.id == hostID) {
       //these commands are only available for the bot host
-      switch (command) {
-        case "ban":
-          client.commands.get("ban").execute(message, client);
-          break;
+      switch (commandSplitted[0]) {
         case "debugdailydosemiku":
-          client.commands
-            .get("dailydosemiku")
-            .execute(channelDailyDoseMiku.get(message.guild.id), client);
+          if (channelDailyDoseMiku.get(message.guild.id) != null) {
+            client.commands
+              .get("dailydosemiku")
+              .execute(channelDailyDoseMiku.get(message.guild.id), client);
+          } else {
+            message.channel.send("Daily Dose of Miku is OFF");
+          }
           break;
         case "exit":
           return process.exit(1);
-          break;
         case "test":
           message.channel.send(message.member.guild.id);
           console.log(message.member.guild.id);
@@ -198,36 +209,96 @@ client.on("message", (message) => {
         case "superban":
           client.commands.get("superban").execute(message, db);
           break;
-        case "updateMaps":
-          updateMaps;
+        case "updatemaps":
+          updateMaps();
+          message.channel.send("Maps updatet");
           break;
       }
-      console.log("miku");
     }
 
-    //-------------------------------------------------------------------------------------------------Owner Commands
+    //-------------------------------------------------------------------------------------------------Owner/Admin Commands
 
-    if (message.guild.ownerID == message.author.id) {
-      //these commands are only available for the server Owner
+    if (
+      //these commands are only available for the server Owner/Admin
+      message.guild.ownerID == message.author.id ||
+      message.member.roles.cache.has(roleAdmin.get(message.guild.id))
+    ) {
       switch (command) {
-        case "ban":
-          client.commands.get("ban").execute(message, client);
-          break;
-        case "setup":
-          client.commands.get("ban").execute(message, client);
-          break;
+        //sets the current channel as the daily dose of miku channel
+        case "set dailydosemiku":
+          if (message.channel.nsfw) {
+            db.query(
+              "UPDATE SERVER SET DAILY_CHANNEL = " +
+                message.channel.id +
+                " WHERE ID = " +
+                message.guild.id
+            );
+            message.channel.send(
+              "Daily Dose of Miku set to channel: " + message.channel.toString()
+            );
+            updateMaps();
+          } else {
+            message.channel.send("This channel is not nsfw!");
+          }
+          return 0;
+        case "set dailydosemiku off": //turns the daily dose of miku function off
+          db.query(
+            "UPDATE SERVER SET DAILY_CHANNEL = NULL WHERE ID = " +
+              message.guild.id
+          );
+          message.channel.send("Daily Dose of Miku is OFF");
+          updateMaps();
+          return 0;
+
+        //sets the current channel as the log channel
+        case "set log":
+          db.query(
+            "UPDATE SERVER SET LOG_CHANNEL = " +
+              message.channel.id +
+              " WHERE ID = " +
+              message.guild.id
+          );
+          message.channel.send(
+            "Log set to channel: " + message.channel.toString()
+          );
+          updateMaps();
+          return 0;
+        case "set log off": //turns the log function off
+          db.query(
+            "UPDATE SERVER SET LOG_CHANNEL = NULL WHERE ID = " +
+              message.guild.id
+          );
+          message.channel.send("Log is OFF");
+          updateMaps();
+          return 0;
+
+        //sets the current channel as the welcome channel
+        case "set welcome":
+          db.query(
+            "UPDATE SERVER SET WELCOME_CHANNEL = " +
+              message.channel.id +
+              " WHERE ID = " +
+              message.guild.id
+          );
+          message.channel.send(
+            "Welcome set to channel: " + message.channel.toString()
+          );
+          updateMaps();
+          return 0;
+        case "set welcome off": //turns the welcome function off
+          db.query(
+            "UPDATE SERVER SET WELCOME_CHANNEL = NULL WHERE ID = " +
+              message.guild.id
+          );
+          message.channel.send("Welcome is OFF");
+          updateMaps();
+          return 0;
       }
-      console.log("owner");
-    }
 
-    //-------------------------------------------------------------------------------------------------Admin Commands
-
-    if (message.member.roles.cache.has(roleAdmin)) {
-      //these commands are only available for users with admin role
-      switch (command) {
+      switch (commandSplitted[0]) {
         case "ban":
           client.commands.get("ban").execute(message, client);
-          break;
+          return 0;
       }
     }
 
@@ -410,12 +481,11 @@ const welcomeMessageAft = [
 ];
 
 client.on("guildMemberAdd", (member) => {
-  //new members will be greeted in welcome channel
-
+  //gets called every time a new member joins a server
   if (channelWelcome.get(member.guild.id) != null) {
     const channel = client.channels.cache.get(
       channelWelcome.get(member.guild.id)
-    );
+    ); //member gets greated via random message
     channel.send(
       welcomeMessagePre[Math.floor(Math.random() * welcomeMessagePre.length)] +
         " <@" +
@@ -426,13 +496,14 @@ client.on("guildMemberAdd", (member) => {
   }
 
   if (member.guild.id == mainServer) {
+    //if the server is the main server all members will be renamy synchronised
     client.commands.get("renameall").execute(member.guild, renameName);
   }
 });
 
 //-------------------------------------------------------------------------------------------------Time Manager
 
-var now = date.getHours() * 60 + date.getMinutes(); //starts and sets the offset for dailydose, DO NOT TOUCH!
+var now = date.getHours() * 60 + date.getMinutes(); //starts and sets the offset for daily dose of miku, DO NOT TOUCH!
 var offset = 0;
 for (
   var i = 0;
@@ -443,6 +514,7 @@ for (
 }
 console.log(offset + " minutes offset");
 setTimeout(function () {
+  updateMaps(); //dailydose gets called once via offset so that the cycle can be synchronysed to 0:00 GMT
   client.guilds.cache.forEach((guild) => {
     client.commands
       .get("dailydosemiku")
@@ -450,6 +522,7 @@ setTimeout(function () {
   });
 
   setInterval(function () {
+    updateMaps(); //dailydose gets called for every server, every day once
     client.guilds.cache.forEach((guild) => {
       client.commands
         .get("dailydosemiku")
@@ -461,16 +534,18 @@ setTimeout(function () {
 //-------------------------------------------------------------------------------------------------On Join Event
 
 client.on("guildCreate", async (guild) => {
+  //gets called when the bot enters a server
   db.query(
     "SELECT * FROM SERVER WHERE ID = " + guild.id + ";",
     function (err, result, fields) {
       if (result[0] == null) {
         db.query(
-          "INSERT INTO SERVER(ID,NAME) VALUES(" +
+          //server gets added to the database if the bot has never been in that server
+          "INSERT INTO SERVER(ID,NAME,PREFIX) VALUES(" +
             guild.id +
             ",'" +
             guild.name +
-            "')"
+            "','!')"
         );
         console.log("Added Server to the database");
       } else {
@@ -480,17 +555,19 @@ client.on("guildCreate", async (guild) => {
         (channel) =>
           channel.type === "text" &&
           channel.permissionsFor(guild.me).has("SEND_MESSAGES")
-      );
+      ); //bot finds a channel with permissions to send a message and introduces itself there
       channel.send(
         "Thanks for inviting me OwO\n" + "You can set me up with !setup",
-        { files: "./images/love/0.jpg" }
+        { files: ["images/love/0.jpg"] }
       );
     }
   );
+  updateMaps();
 });
 
 //-------------------------------------------------------------------------------------------------Client Login
 
 (async () => {
+  //bot connects with Discord api
   client.login(process.env.TOKEN);
 })();
