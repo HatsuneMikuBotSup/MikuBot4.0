@@ -71,12 +71,13 @@ function updateMaps() {
         console.log(result);
         if (result[0] == null) {
           db.query(
-            "INSERT INTO SERVER(ID,NAME,PREFIX) VALUES(" +
+            "INSERT INTO SERVER(ID,NAME,PREFIX,SLUR_FILTER,CHAT_WORDS_PERCENTAGE) VALUES(" +
               guild.id +
               ",'" +
               guild.name +
-              "','!');"
+              "','!', TRUE, 10)"
           );
+          updateMaps();
         } else {
           //Synchronises the maps with the database
           prefix.set(guild.id, result[0].PREFIX);
@@ -108,20 +109,22 @@ client.on("message", (message) => {
 
   //-------------------------------------------------------------------------------------------------Anti Racist Chat
 
-  if (
-    message.content.toLowerCase().includes("nigger") ||
-    message.content.toLowerCase().includes("niggers") ||
-    message.content.toLowerCase().includes("niger") ||
-    message.content.toLowerCase().includes("nigga") ||
-    message.content.toLowerCase().includes("niggas") ||
-    message.content.toLowerCase().includes("niga")
-  ) {
-    //racist messages will get deleted
-    message.channel.send("U fucking racist go kys :D");
-    message.delete();
-    return 0;
+  if (slurFilter.get(message.guild.id)) {
+    if (
+      message.content.toLowerCase().includes("nigger") ||
+      message.content.toLowerCase().includes("niggers") ||
+      message.content.toLowerCase().includes("niger") ||
+      message.content.toLowerCase().includes("nigga") ||
+      message.content.toLowerCase().includes("niggas") ||
+      message.content.toLowerCase().includes("niga")
+    ) {
+      //racist messages will get deleted
+      message.channel.send("U fucking racist go kys :D " +message.member.user.toString());
+      message.delete();
+      return 0;
+    }
   }
-
+  
   //-------------------------------------------------------------------------------------------------Anti Dacancer Chat
 
   if (message.content.toLowerCase().includes("dababy")) {
@@ -132,7 +135,7 @@ client.on("message", (message) => {
 
   //-------------------------------------------------------------------------------------------------Chat Words
 
-  if (Math.random() > chatWordsPercentage.get(message.guild.id) / 100) {
+  if (Math.random() * 100 < Number(chatWordsPercentage.get(message.guild.id))) {
     //chatwords will be send back, multiple triggers are possible
     if (message.content.toLowerCase().includes("owo")) {
       message.channel.send("OwO");
@@ -221,7 +224,9 @@ client.on("message", (message) => {
       message.guild.ownerID == message.author.id ||
       message.member.roles.cache.has(roleAdmin.get(message.guild.id))
     ) {
-      switch (command) {
+      switch (
+        command //---------------------------------------------------------------------full
+      ) {
         //sets the current channel as the daily dose of miku channel
         case "set dailydosemiku":
           if (message.channel.nsfw) {
@@ -291,13 +296,48 @@ client.on("message", (message) => {
           message.channel.send("Welcome is OFF");
           updateMaps();
           return 0;
-      }
 
-      //change the server prefix
+        case "set admin off": //turns the admin function off
+          db.query(
+            "UPDATE SERVER SET ADMIN_ROLE = NULL WHERE ID = " + message.guild.id
+          );
+          message.channel.send("Admin role is OFF");
+          updateMaps();
+          return 0;
+
+        case "set sus off": //turns the Sus function off
+          db.query(
+            "UPDATE SERVER SET SUS_ROLE = NULL WHERE ID = " + message.guild.id
+          );
+          message.channel.send("Sus role is OFF");
+          updateMaps();
+          return 0;
+
+        case "set slurfilter off": //turns the slurfilter function off
+          db.query(
+            "UPDATE SERVER SET SLUR_FILTER = FALSE WHERE ID = " +
+              message.guild.id
+          );
+          message.channel.send("Slurfilter  is OFF");
+          updateMaps();
+          return 0;
+
+        case "set slurfilter on": //turns the slurfilter function on
+          db.query(
+            "UPDATE SERVER SET SLUR_FILTER = TRUE WHERE ID = " +
+              message.guild.id
+          );
+          message.channel.send("Slurfilter is ON");
+          updateMaps();
+          return 0;
+      }
+      //------------------------------------------------------------------------splitted
       switch (commandSplitted[0]) {
         case "ban":
           client.commands.get("ban").execute(message, client);
           return 0;
+
+        //change the server prefix
         case "prefix":
           if (commandSplitted[1] != null) {
             if (commandSplitted[1].length == 1) {
@@ -318,6 +358,74 @@ client.on("message", (message) => {
             );
           }
           return 0;
+
+        case "set":
+          switch (commandSplitted[1]) {
+            //change the server admin role
+            case "admin":
+              if (message.mentions.roles.size == 1) {
+                db.query(
+                  "UPDATE SERVER SET ADMIN_ROLE = '" +
+                    message.mentions.roles.first() +
+                    "' WHERE ID = " +
+                    message.guild.id
+                );
+                message.channel.send(
+                  "Admin role changed to: <@&" +
+                    message.mentions.roles.first() +
+                    ">"
+                );
+                updateMaps();
+              } else {
+                message.channel.send("Please mention the admin role with @");
+              }
+              return 0;
+
+            //change the server chatwordpercentage
+            case "percentage":
+              if (commandSplitted[2] != null) {
+                if (commandSplitted[2] <= 100 && commandSplitted[2] >= 0) {
+                  db.query(
+                    "UPDATE SERVER SET CHAT_WORDS_PERCENTAGE = '" +
+                      commandSplitted[2] +
+                      "' WHERE ID = " +
+                      message.guild.id
+                  );
+                  message.channel.send(
+                    "Echowords percentage changed to: " + commandSplitted[2]
+                  );
+                  updateMaps();
+                } else {
+                  message.channel.send("Enter a valid number between 0-100");
+                }
+              } else {
+                message.channel.send(
+                  "Current echowords percentage is: " +
+                    chatWordsPercentage.get(message.guild.id)
+                );
+              }
+              return 0;
+
+            //change the server sus role
+            case "sus":
+              if (message.mentions.roles.size == 1) {
+                db.query(
+                  "UPDATE SERVER SET SUS_ROLE = '" +
+                    message.mentions.roles.first() +
+                    "' WHERE ID = " +
+                    message.guild.id
+                );
+                message.channel.send(
+                  "Sus role changed to: <@&" +
+                    message.mentions.roles.first() +
+                    ">"
+                );
+                updateMaps();
+              } else {
+                message.channel.send("Please mention the sus role with @");
+              }
+              return 0;
+          }
       }
     }
 
@@ -567,14 +675,6 @@ client.on("guildCreate", async (guild) => {
     "SELECT * FROM SERVER WHERE ID = " + guild.id + ";",
     function (err, result, fields) {
       if (result[0] == null) {
-        db.query(
-          //server gets added to the database if the bot has never been in that server
-          "INSERT INTO SERVER(ID,NAME,PREFIX) VALUES(" +
-            guild.id +
-            ",'" +
-            guild.name +
-            "','!')"
-        );
         console.log("Added Server to the database");
       } else {
         console.log("Server allready on the database");
