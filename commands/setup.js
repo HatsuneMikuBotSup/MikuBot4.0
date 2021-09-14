@@ -25,7 +25,7 @@ module.exports = {
       .addField("Change roles:",
       prefix+"set admin @role            - Users with this role will have acces to these commands\n" +
       prefix+"set admin off              - Turns the admin role function off\n" +
-      prefix+"set sus @role              - When active users with a new account will be assignend this role\n" +
+      prefix+"set sus @role              - Users with a new account will be assignend this role\n" +
       prefix+"set sus off                - Turns the sus role function off\n");
 
     message.channel.send(embed);

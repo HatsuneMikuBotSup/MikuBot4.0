@@ -293,9 +293,30 @@ client.on("message", (message) => {
           return 0;
       }
 
+      //change the server prefix
       switch (commandSplitted[0]) {
         case "ban":
           client.commands.get("ban").execute(message, client);
+          return 0;
+        case "prefix":
+          if (commandSplitted[1] != null) {
+            if (commandSplitted[1].length == 1) {
+              db.query(
+                "UPDATE SERVER SET PREFIX = '" +
+                  commandSplitted[1] +
+                  "' WHERE ID = " +
+                  message.guild.id
+              );
+              message.channel.send("Prefix changed to: " + commandSplitted[1]);
+              updateMaps();
+            } else {
+              message.channel.send("prefix to long!");
+            }
+          } else {
+            message.channel.send(
+              "current prefix is: " + prefix.get(message.guild.id)
+            );
+          }
           return 0;
       }
     }
