@@ -53,6 +53,21 @@ const mainServer = "606567664852402188";
 const hostID = "355429746261229568";
 var date = new Date();
 
+//-------------------------------------------------------------------------------------------------DailyDoseImages
+
+const dir = "./dailydose";
+const fileExtension = new Map();
+var filesLength;
+
+fs.readdir(dir, (err, files) => {
+  console.log(files.length + " files");
+  filesLength = files.length;
+
+  files.forEach((file) => {
+    fileExtension.set(file.split(".")[0], file.split(".")[1]);
+  });
+});
+
 //-------------------------------------------------------------------------------------------------Boot
 
 client.once("ready", () => {
@@ -60,6 +75,7 @@ client.once("ready", () => {
   updateMaps();
   client.user.setActivity(botName + " 4 President!");
   console.log(botName + " is online!");
+  console.log(fileExtension);
 });
 
 function updateMaps() {
@@ -68,7 +84,6 @@ function updateMaps() {
     db.query(
       "SELECT * FROM SERVER WHERE ID = " + guild.id + ";",
       function (err, result, fields) {
-        console.log(result);
         if (result[0] == null) {
           db.query(
             "INSERT INTO SERVER(ID,NAME,PREFIX,SLUR_FILTER,CHAT_WORDS_PERCENTAGE) VALUES(" +
@@ -204,9 +219,7 @@ client.on("message", (message) => {
       switch (commandSplitted[0]) {
         case "debugdailydosemiku":
           if (channelDailyDoseMiku.get(message.guild.id) != null) {
-            client.commands
-              .get("dailydosemiku")
-              .execute(channelDailyDoseMiku.get(message.guild.id), client);
+            dailyDoseMiku(message.guild);
           } else {
             message.channel.send("Daily Dose of Miku is OFF");
           }
@@ -683,20 +696,68 @@ console.log(offset + " minutes offset");
 setTimeout(function () {
   updateMaps(); //dailydose gets called once via offset so that the cycle can be synchronysed to 0:00 GMT
   client.guilds.cache.forEach((guild) => {
-    client.commands
-      .get("dailydosemiku")
-      .execute(channelDailyDoseMiku.get(guild.id), client);
+    dailyDoseMiku(guild);
   });
 
   setInterval(function () {
     updateMaps(); //dailydose gets called for every server, every day once
     client.guilds.cache.forEach((guild) => {
-      client.commands
-        .get("dailydosemiku")
-        .execute(channelDailyDoseMiku.get(guild.id), client);
+      dailyDoseMiku(guild);
     });
-  }, 1000 * 60 * 60 * 24);
+  }, 1000 * 60 * 60 * 1);
 }, 1000 * 60 * offset);
+
+function dailyDoseMiku(guild) {
+  const channel = client.channels.cache.get(channelDailyDoseMiku.get(guild.id));
+
+  channel.send("This is YOUR Daily Dose of Miku!");
+  for (var i = 0; i < 1; i++) {
+    var image = Math.floor(Math.random() * filesLength);
+    channel
+      .send("", {
+        files: ["dailydose/" + image + "." + fileExtension.get(image + "")],
+      })
+      .then(function (message) {
+        message.react("👍");
+        message.react("👎");
+        setTimeout(function () {
+          db.query(
+            "SELECT * FROM MEDIA WHERE ID = " + image + ";",
+            function (err, result, fields) {
+              if (result[0] == null) {
+                db.query(
+                  "INSERT INTO MEDIA(ID, TOTAL_UPVOTES, TOTAL_DOWNVOTES) VALUES(" +
+                    image +
+                    "," +
+                    (message.reactions.cache.get("👍").count - 1) +
+                    "," +
+                    (message.reactions.cache.get("👎").count - 1) +
+                    ")"
+                );
+              } else {
+                db.query(
+                  "UPDATE MEDIA SET TOTAL_UPVOTES = " +
+                    (message.reactions.cache.get("👍").count -
+                      1 +
+                      result[0].TOTAL_UPVOTES) +
+                    ", TOTAL_DOWNVOTES = " +
+                    (message.reactions.cache.get("👎").count -
+                      1 +
+                      result[0].TOTAL_DOWNVOTES) +
+                    ")"
+                );
+              }
+            }
+          );
+        }, 1000 * 60 * 60 * 24);
+      })
+      .catch(function (err) {
+        console.log(err);
+      });
+  }
+  client.user.setActivity("daily dose of miku!");
+  console.log("Daily Dose of Miku Time!");
+}
 
 //-------------------------------------------------------------------------------------------------On Join Event
 
