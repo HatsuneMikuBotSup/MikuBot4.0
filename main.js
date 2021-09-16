@@ -48,9 +48,10 @@ const roleAdmin = new Map();
 const roleSus = new Map();
 //Fixed const id's
 const botName = "Miku";
-const renameName = "UCanCallMe"; //should be around 10 Characters Never go over lenghth 30
+const renameName = "❤"; //should be around 10 Characters Never go over lenghth 30
 const mainServer = "606567664852402188";
 const hostID = "355429746261229568";
+const botID = "782328525071056918";
 var date = new Date();
 
 //-------------------------------------------------------------------------------------------------DailyDoseImages
@@ -75,7 +76,6 @@ client.once("ready", () => {
   updateMaps();
   client.user.setActivity(botName + " 4 President!");
   console.log(botName + " is online!");
-  console.log(fileExtension);
 });
 
 function updateMaps() {
@@ -120,14 +120,22 @@ function logThis(p1, p2) {
 
 client.on("message", (message) => {
   //gets called on every message
-  console.log(
-    message.guild.name + " " + message.author.tag + ": " + message.content
-  );
-
   if (message.author.bot) {
     //ensures that the bot doesnt loop, talks with itself
     return 0;
   }
+
+  if (message.channel.type != "text") {
+    message.channel.send(
+      "Miku only works inside a server!\nhttps://discord.com/api/oauth2/authorize?client_id=782328525071056918&permissions=8&scope=bot"
+    );
+    console.log(message.author.tag + ": " + message.content);
+    return 0;
+  }
+
+  console.log(
+    message.guild.name + " " + message.author.tag + ": " + message.content
+  );
 
   //-------------------------------------------------------------------------------------------------Anti Racist Chat
 
@@ -231,7 +239,7 @@ client.on("message", (message) => {
           console.log(message.member.guild.id);
           break;
         case "renameall":
-          client.commands.get("renameall").execute(message.guild, renameName);
+          client.commands.get("renameall").execute(message.guild, renameName, true);
           break;
         case "superban":
           client.commands.get("superban").execute(message, db);
@@ -677,7 +685,7 @@ client.on("guildMemberAdd", (member) => {
 
   if (member.guild.id == mainServer) {
     //if the server is the main server all members will be renamy synchronised
-    client.commands.get("renameall").execute(member.guild, renameName);
+    client.commands.get("renameall").execute(member.guild, renameName, false);
   }
 });
 
@@ -692,6 +700,7 @@ for (
 ) {
   offset++;
 }
+offset = 27;
 console.log(offset + " minutes offset");
 setTimeout(function () {
   updateMaps(); //dailydose gets called once via offset so that the cycle can be synchronysed to 0:00 GMT
@@ -708,55 +717,54 @@ setTimeout(function () {
 }, 1000 * 60 * offset);
 
 function dailyDoseMiku(guild) {
-  const channel = client.channels.cache.get(channelDailyDoseMiku.get(guild.id));
+  if (channelDailyDoseMiku.get(guild.id) != null) {
+    const channel = client.channels.cache.get(
+      channelDailyDoseMiku.get(guild.id)
+    );
 
-  channel.send("This is YOUR Daily Dose of Miku!");
-  for (var i = 0; i < 1; i++) {
-    var image = Math.floor(Math.random() * filesLength);
-    channel
-      .send("", {
-        files: ["dailydose/" + image + "." + fileExtension.get(image + "")],
-      })
-      .then(function (message) {
-        message.react("👍");
-        message.react("👎");
-        setTimeout(function () {
+    channel.messages.fetch({ limit: 100 }).then((messages) => {
+      messages.forEach((message) => {
+        if (
+          message.attachments.array()[0] != null &&
+          message.reactions.cache.array()[0].emoji.name == "👍" &&
+          message.reactions.cache.array()[1].emoji.name == "👎" &&
+          message.reactions != null  &&
+          message.author.id == botID
+        ) {
           db.query(
-            "SELECT * FROM MEDIA WHERE ID = " + image + ";",
-            function (err, result, fields) {
-              if (result[0] == null) {
-                db.query(
-                  "INSERT INTO MEDIA(ID, TOTAL_UPVOTES, TOTAL_DOWNVOTES) VALUES(" +
-                    image +
-                    "," +
-                    (message.reactions.cache.get("👍").count - 1) +
-                    "," +
-                    (message.reactions.cache.get("👎").count - 1) +
-                    ")"
-                );
-              } else {
-                db.query(
-                  "UPDATE MEDIA SET TOTAL_UPVOTES = " +
-                    (message.reactions.cache.get("👍").count -
-                      1 +
-                      result[0].TOTAL_UPVOTES) +
-                    ", TOTAL_DOWNVOTES = " +
-                    (message.reactions.cache.get("👎").count -
-                      1 +
-                      result[0].TOTAL_DOWNVOTES) +
-                    ")"
-                );
-              }
-            }
+            "INSERT INTO MEDIA(ID, TOTAL_UPVOTES, TOTAL_DOWNVOTES) VALUES(" +
+              message.attachments.array()[0].name.split(".")[0] +
+              "," +
+              (message.reactions.cache.get("👍").count - 1) +
+              "," +
+              (message.reactions.cache.get("👎").count - 1) +
+              ") ON DUPLICATE KEY UPDATE TOTAL_UPVOTES = " +
+              (message.reactions.cache.get("👍").count - 1) +
+              ", TOTAL_DOWNVOTES = " +
+              (message.reactions.cache.get("👎").count - 1)
           );
-        }, 1000 * 60 * 60 * 24);
-      })
-      .catch(function (err) {
-        console.log(err);
+        }
       });
+    });
+
+    channel.send("This is YOUR Daily Dose of Miku!");
+    for (var i = 0; i < 1; i++) {
+      var image = Math.floor(Math.random() * filesLength);
+      channel
+        .send("", {
+          files: ["dailydose/" + image + "." + fileExtension.get(image + "")],
+        })
+        .then(function (message) {
+          message.react("👍");
+          message.react("👎");
+        })
+        .catch(function (err) {
+          console.log(err);
+        });
+    }
+    client.user.setActivity("Daily Dose of Miku!");
+    console.log("Daily Dose of Miku Time!");
   }
-  client.user.setActivity("daily dose of miku!");
-  console.log("Daily Dose of Miku Time!");
 }
 
 //-------------------------------------------------------------------------------------------------On Join Event
