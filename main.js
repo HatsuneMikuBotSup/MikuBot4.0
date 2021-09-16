@@ -691,25 +691,16 @@ client.on("guildMemberAdd", (member) => {
 
 //-------------------------------------------------------------------------------------------------Time Manager
 
-var now = date.getHours() * 60 + date.getMinutes(); //starts and sets the offset for daily dose of miku, DO NOT TOUCH!
-var offset = 0;
-for (
-  var i = 0;
-  now + offset != 11 * 60 && now + offset != 23 * 60 && now + offset != 35 * 60;
-  i++
-) {
-  offset++;
-}
-offset = 27;
+offset = 60 - date.getMinutes(); //starts and sets the offset for daily dose of miku, DO NOT TOUCH!
 console.log(offset + " minutes offset");
 setTimeout(function () {
-  updateMaps(); //dailydose gets called once via offset so that the cycle can be synchronysed to 0:00 GMT
+  updateMaps(); //dailydose gets called once via offset so that the cycle can be synchronysed hourly
   client.guilds.cache.forEach((guild) => {
     dailyDoseMiku(guild);
   });
 
   setInterval(function () {
-    updateMaps(); //dailydose gets called for every server, every day once
+    updateMaps(); //dailydose gets called for every server, every hour
     client.guilds.cache.forEach((guild) => {
       dailyDoseMiku(guild);
     });

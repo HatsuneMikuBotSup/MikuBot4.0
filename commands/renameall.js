@@ -6,7 +6,6 @@ module.exports = {
     guild.members.fetch().then((members) => {
       members.forEach(async (member) => {
         if (member.user.id == guild.ownerID) {
-          console.log(member.user);
         } else {
           if (
             !member.nickname ||
