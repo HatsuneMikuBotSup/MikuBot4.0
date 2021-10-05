@@ -89,7 +89,7 @@ function updateMaps() {
             "INSERT INTO SERVER(ID,NAME,PREFIX,SLUR_FILTER,CHAT_WORDS_PERCENTAGE) VALUES(" +
               guild.id +
               ",'" +
-              guild.name +
+              guild.name.replace("'", '"') +
               "','!', TRUE, 10)"
           );
           updateMaps();
@@ -120,6 +120,15 @@ function logThis(p1, p2) {
 
 client.on("message", (message) => {
   //gets called on every message
+
+  if (message.channel.type != "text") {
+    console.log(message.author.tag + ": " + message.content);
+  } else {
+    console.log(
+      message.guild.name + " " + message.author.tag + ": " + message.content
+    );
+  }
+
   if (message.author.bot) {
     //ensures that the bot doesnt loop, talks with itself
     return 0;
@@ -127,15 +136,13 @@ client.on("message", (message) => {
 
   if (message.channel.type != "text") {
     message.channel.send(
-      "Miku only works inside a server!\nhttps://discord.com/api/oauth2/authorize?client_id=782328525071056918&permissions=8&scope=bot"
+      "Miku only works inside a server!\n" +
+        "Invite me to your server OwO\n\n" +
+        "https://discord.com/api/oauth2/authorize?client_id=782328525071056918&permissions=8&scope=bot",
+      { files: ["images/cute/4.jpg"] }
     );
-    console.log(message.author.tag + ": " + message.content);
     return 0;
   }
-
-  console.log(
-    message.guild.name + " " + message.author.tag + ": " + message.content
-  );
 
   //-------------------------------------------------------------------------------------------------Anti Racist Chat
 
@@ -234,12 +241,17 @@ client.on("message", (message) => {
           break;
         case "exit":
           return process.exit(1);
+        case "invite":
+          replyWithInvite(message);
+          break;
         case "test":
           message.channel.send(message.member.guild.id);
           console.log(message.member.guild.id);
           break;
         case "renameall":
-          client.commands.get("renameall").execute(message.guild, renameName, true);
+          client.commands
+            .get("renameall")
+            .execute(message.guild, renameName, true);
           break;
         case "superban":
           client.commands.get("superban").execute(message, db);
@@ -249,6 +261,25 @@ client.on("message", (message) => {
           message.channel.send("Maps updatet");
           break;
       }
+    }
+
+    async function replyWithInvite(message) {
+      client.guilds.cache.forEach((guild) => {
+        const channel = guild.channels.cache.find(
+          (channel) =>
+            channel.type === "text" &&
+            channel.permissionsFor(guild.me).has("SEND_MESSAGES")
+        );
+        var invite = channel
+          .createInvite({ maxAge: 0, maxUses: 1 })
+          .then((invite) => {
+            message.channel.send(
+              invite
+                ? `Here's your invite: ${invite}`
+                : "There has been an error during the creation of the invite."
+            );
+          });
+      });
     }
 
     //-------------------------------------------------------------------------------------------------Owner/Admin Commands
@@ -524,7 +555,7 @@ client.on("message", (message) => {
         client.commands.get("lick").execute(message);
         break;
       case "love":
-        client.commands.get("love").execute(message);
+        client.commands.get("cute").execute(message);
         break;
       case "marry":
         client.commands.get("marry").execute(message);
@@ -717,23 +748,27 @@ function dailyDoseMiku(guild) {
       messages.forEach((message) => {
         if (
           message.attachments.array()[0] != null &&
-          message.reactions.cache.array()[0].emoji.name == "👍" &&
-          message.reactions.cache.array()[1].emoji.name == "👎" &&
-          message.reactions != null  &&
-          message.author.id == botID
+          message.reactions.cache != null
         ) {
-          db.query(
-            "INSERT INTO MEDIA(ID, TOTAL_UPVOTES, TOTAL_DOWNVOTES) VALUES(" +
-              message.attachments.array()[0].name.split(".")[0] +
-              "," +
-              (message.reactions.cache.get("👍").count - 1) +
-              "," +
-              (message.reactions.cache.get("👎").count - 1) +
-              ") ON DUPLICATE KEY UPDATE TOTAL_UPVOTES = " +
-              (message.reactions.cache.get("👍").count - 1) +
-              ", TOTAL_DOWNVOTES = " +
-              (message.reactions.cache.get("👎").count - 1)
-          );
+          if (
+            message.reactions.cache.array()[0].emoji.name == "👍" &&
+            message.reactions.cache.array()[1].emoji.name == "👎" &&
+            message.reactions != null &&
+            message.author.id == botID
+          ) {
+            db.query(
+              "INSERT INTO MEDIA(ID, TOTAL_UPVOTES, TOTAL_DOWNVOTES) VALUES(" +
+                message.attachments.array()[0].name.split(".")[0] +
+                "," +
+                (message.reactions.cache.get("👍").count - 1) +
+                "," +
+                (message.reactions.cache.get("👎").count - 1) +
+                ") ON DUPLICATE KEY UPDATE TOTAL_UPVOTES = " +
+                (message.reactions.cache.get("👍").count - 1) +
+                ", TOTAL_DOWNVOTES = " +
+                (message.reactions.cache.get("👎").count - 1)
+            );
+          }
         }
       });
     });
@@ -777,7 +812,7 @@ client.on("guildCreate", async (guild) => {
       ); //bot finds a channel with permissions to send a message and introduces itself there
       channel.send(
         "Thanks for inviting me OwO\n" + "You can set me up with !setup",
-        { files: ["images/love/0.jpg"] }
+        { files: ["images/cute/0.jpg"] }
       );
     }
   );
