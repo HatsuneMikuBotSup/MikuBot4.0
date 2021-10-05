@@ -15,8 +15,8 @@ module.exports = {
       prefix+"set slurfilter off         - Turns the slurfilter function off\n")
 
       .addField("Change channels:",
-      prefix+"set dailydose              - Sets the current channel to the daily dose of miku channel\n" +
-      prefix+"set dailydose off          - Turns the daily dose of miku function off\n" +
+      prefix+"set dailydosemiku          - Sets the current channel to the daily dose of miku channel\n" +
+      prefix+"set dailydosemiku off      - Turns the daily dose of miku function off\n" +
       prefix+"set log                    - Sets the current channel to the log channel\n" +
       prefix+"set log off                - Turns the log function off\n" +
       prefix+"set welcome                - Sets the current channel to the welcome channel\n" +

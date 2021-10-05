@@ -410,32 +410,6 @@ client.on("message", (message) => {
           client.commands.get("ban").execute(message, client);
           return 0;
 
-        //change the server prefix
-        case "prefix":
-          if (commandSplitted[1] != null) {
-            if (commandSplitted[1].length == 1) {
-              db.query(
-                "UPDATE SERVER SET PREFIX = '" +
-                  commandSplitted[1] +
-                  "' WHERE ID = " +
-                  message.guild.id
-              );
-              message.channel.send("Prefix changed to: " + commandSplitted[1]);
-              logThis(
-                message.guild,
-                "Prefix changed to: " + commandSplitted[1]
-              );
-              updateMaps();
-            } else {
-              message.channel.send("prefix to long!");
-            }
-          } else {
-            message.channel.send(
-              "current prefix is: " + prefix.get(message.guild.id)
-            );
-          }
-          return 0;
-
         case "set":
           switch (commandSplitted[1]) {
             //change the server admin role
@@ -485,6 +459,34 @@ client.on("message", (message) => {
                 message.channel.send(
                   "Current echowords percentage is: " +
                     chatWordsPercentage.get(message.guild.id)
+                );
+              }
+              return 0;
+
+            //change the server prefix
+            case "prefix":
+              if (commandSplitted[2] != null) {
+                if (commandSplitted[2].length == 1) {
+                  db.query(
+                    "UPDATE SERVER SET PREFIX = '" +
+                      commandSplitted[2] +
+                      "' WHERE ID = " +
+                      message.guild.id
+                  );
+                  message.channel.send(
+                    "Prefix changed to: " + commandSplitted[2]
+                  );
+                  logThis(
+                    message.guild,
+                    "Prefix changed to: " + commandSplitted[2]
+                  );
+                  updateMaps();
+                } else {
+                  message.channel.send("prefix to long!");
+                }
+              } else {
+                message.channel.send(
+                  "current prefix is: " + prefix.get(message.guild.id)
                 );
               }
               return 0;
@@ -671,7 +673,7 @@ client.on("message", (message) => {
   }
 });
 
-//-------------------------------------------------------------------------------------------------On Join Event
+//-------------------------------------------------------------------------------------------------On Member Join Event
 
 const welcomeMessagePre = [
   "Henlo",
@@ -715,7 +717,7 @@ client.on("guildMemberAdd", (member) => {
   }
 
   if (member.guild.id == mainServer) {
-    //if the server is the main server all members will be renamy synchronised
+    //if the server is the main server all members will be renamed synchronised
     client.commands.get("renameall").execute(member.guild, renameName, false);
   }
 });
@@ -793,7 +795,7 @@ function dailyDoseMiku(guild) {
   }
 }
 
-//-------------------------------------------------------------------------------------------------On Join Event
+//-------------------------------------------------------------------------------------------------On Server Join Event
 
 client.on("guildCreate", async (guild) => {
   //gets called when the bot enters a server
