@@ -653,6 +653,9 @@ client.on("message", (message) => {
         case "horny":
           client.commands.get("horny").execute(message);
           break;
+        case "inflation":
+          client.commands.get("inflation").execute(message);
+          break;
         case "naked":
           client.commands.get("naked").execute(message);
           break;

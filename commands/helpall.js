@@ -26,6 +26,7 @@ module.exports = {
     prefix+"hentai                        - Searches for Hentai on rule34\n" +
     prefix+"horny                         - If u are desperatly horny\n" +
     prefix+"hug                           - Hug someone\n" +
+    prefix+"inflation                     - Inflation kink\n" +
     prefix+"kill                          - Kill someone\n" +
     prefix+"kiss                          - Kiss someone\n" +
     prefix+"lick                          - Lick someone\n" +
